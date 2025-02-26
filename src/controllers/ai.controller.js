@@ -153,3 +153,47 @@ function determineEmotion(text) {
 function shouldMove(responseType) {
   return ['MOVEMENT', 'IDENTITY'].includes(responseType);
 }
+
+export const healthCheck = async (req, res) => {
+  try {
+    // Simple test call to Gemini API to verify connectivity
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{ text: "test" }]
+          }]
+        })
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error('Gemini API not responding');
+    }
+
+    res.json({
+      status: 'success',
+      message: 'Server is healthy',
+      details: {
+        serverTime: new Date().toISOString(),
+        geminiAPI: 'connected',
+        version: '1.0.0'
+      }
+    });
+  } catch (error) {
+    res.status(503).json({
+      status: 'error',
+      message: 'Server is not healthy',
+      details: {
+        serverTime: new Date().toISOString(),
+        geminiAPI: 'disconnected',
+        error: error.message
+      }
+    });
+  }
+};
